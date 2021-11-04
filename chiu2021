@@ -1,0 +1,259 @@
+0. Introduction
+- Wagtail 是一個基於Python語言中Django架構開發的一個寫部落格網站的工具
+- 安裝Python 3
+- refer to Google Doc [my test(wagtail)]
+
+1. 建立虛擬機
+pip install install --user --upgrade pip
+pip install virtualenv
+REM #再次確保虛擬機的python是python3
+REM #應該會在Terminal看見 (env) 為開頭的下一列指令, not work for WIN
+REM #上面這行指令可以顯示Python版本, return Python 3.9.1
+virtualenv -p python3 env2
+REM source env/bin/activate       
+python -V                     
+
+2. 安裝Wagtail
+pip install wagtail
+wagtail start mysite2
+cd mysite2
+pip install -r requirements.txt 
+REM 設立需要的後段資料庫、設立最高權限者的帳號密碼(a)
+python manage.py migrate
+python manage.py createsuperuser
+
+	C:\Users\Leo\mysite>python manage.py createsuperuser
+	Username (leave blank to use 'leo'):
+	Email address: leochan2.lc@gmail.com
+	Password:
+	Password (again):
+	This password is too short. It must contain at least 8 characters.
+	This password is too common.
+	Bypass password validation and create user anyway? [y/N]: y
+	Superuser created successfully.
+
+3. 歡迎頁面 (ok)
+python manage.py runserver
+http://127.0.0.1:8000
+
+4. Home Page Customization
+- edit models.py(C:\Users\Leo\mysite2\home\), lookup [models1.py]
+- edit home_page.html(C:\Users\Leo\mysite\home\templates\home\), lookup [home_page1.html]
+- note: should be 'wagtailcore_tags' instead of 'wagtail core_tags'
+- update changes
+python manage.py makemigrations 
+python manage.py migrate
+python manage.py runserver
+http://127.0.0.1:8000/admin
+- edit Pages>Home>Content
+- [Publish]
+http://127.0.0.1:8000
+- ERR: 'wagtail' is not a registered tag library. Must be one of: admin_list admin_modify admin_urls cache i18n l10n log static tz wagtailadmin_tags wagtailcore_tags wagtailembeds_tags wagtailimages_tags wagtailsnippets_admin_tags wagtailuserbar wagtailusers_tags
+
+5. Add BLOG
+python manage.py startapp blog
+- edit base.py(C:\Users\Leo\mysite\mysite\settings\), lookup [base1.py]
+- edit models.py(C:\Users\Leo\mysite\blog\), lookup [models2.py]
+mkdir C:\Users\Leo\mysite2\blog\template\blog
+- edit blog_index_page.html(C:\Users\Leo\mysite2\home\template\blog), lookup [blog_index_page1.html]
+- edit blog_page.html      (C:\Users\Leo\mysite2\home\template\blog), lookup [blog_page1.html]
+python manage.py makemigrations 
+python manage.py migrate
+python manage.py runserver
+http://127.0.0.1:8000/admin
+- add BlogIndex (Pages > Home > Add Child Page > Blog index page)
+- add BlogPage (Blog index page > Add Child Page > Blog page)
+http://127.0.0.1:8000/blog
+
+ERR:
+AttributeError at /admin/pages/add/blog/blogindexpage/3/
+'NoneType' object has no attribute '_inc_path'
+CAUSE:
+https://stackoverflow.com/questions/29386631/wagtail-0-8-6-admin-nonetype-object-has-no-attribute-allowed-subpage-types
+FIX:
+- remove the home page and recreate
+
+6. Add tags
+- edit models.py(C:\Users\Leo\mysite\blog\), lookup [models3.py]
+- edit blog_page.html      (C:\Users\Leo\mysite2\home\template\blog), lookup [blog_page2.html]
+- edit blog_tag_index_page.html (C:\Users\Leo\mysite2\home\template\blog), lookup [blog_tag_index_page1.html]
+python manage.py makemigrations 
+python manage.py migrate
+python manage.py runserver
+
+[models1.py]
+from django.db import models 
+from wagtail.core.models import Page
+from wagtail.core.fields import RichTextField
+from wagtail.admin.edit_handlers import FieldPanel 
+class HomePage(Page):
+    body = RichTextField(blank=True)  #創造一個「body」的文件類型
+    
+    content_panels = Page.content_panels + [
+        FieldPanel('body',classname="full"),
+    ]
+    #在後台將body加入加入需要填寫的欄位
+
+[home_page1.html]
+# home/templates/home/home_page.html 
+{% extends "base.html" %}
+{% load wagtailcore_tags %} #告訴wagtail 需要使用core_tags 的預設模塊
+{% block body_class %}template-homepage{% endblock %}
+{% block content %}
+    {{ page.body|richtext }}
+{% endblock %}
+
+[base1.py]
+- add 1 line after 'search'
+    'search',
+    'blog', #新加上
+
+[models2.py]
+# blog/models.py
+from django.db import models
+from modelcluster.fields import ParentalKey 
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase 
+from wagtail.core.models import Page, Orderable 
+from wagtail.core.fields import RichTextField 
+from wagtail.admin.edit_handlers import FieldPanel,MultiFieldPanel 
+from wagtail.search import index 
+class BlogIndexPage(Page):
+    intro = RichTextField(blank=True)
+    content_panels = Page.content_panels + [
+        FieldPanel('intro', classname="full")
+    ]
+class BlogTagIndexPage(Page): 
+    def get_context(self, request): # Filter by tag 
+        tag = request.GET.get('tag') 
+        blogpages = BlogPage.objects.filter(tags__name=tag) 
+        context = super().get_context(request) 
+        context['blogpages'] = blogpages                            # 更新context，在之後template的時候會用到 
+        return context
+class BlogPageTag(TaggedItemBase): 
+    content_object = ParentalKey(                   'BlogPage',
+    related_name='tagged_items', 
+    on_delete=models.CASCADE )
+class BlogPage(Page): 
+    date = models.DateField('Post date') 
+    intro = models.CharField(max_length=250) 
+    body = RichTextField(blank=True) 
+    tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
+    search_field = Page.search_fields + [
+            index.SearchField('intro'),
+            index.SearchField('body'),
+        ]
+    content_panels = Page.content_panels + [
+    MultiFieldPanel([
+    FieldPanel('date'),
+    FieldPanel('tags'), ],
+    heading='Blog information'
+    ),
+    FieldPanel('intro'),
+    FieldPanel('body'),
+]
+
+[blog_index_page1.html]
+# template/blog/blog_index_page.html {% extends "base.html" %}
+{% load wagtailcore_tags %}{% block body_class %}template-blogindexpage{% endblock %}{% block content %}
+    <h1> {{page.title}} </h1> 
+    #將page定義的title作為h1的大標題放在頁面中
+    <div class="intro"> {{page.intro|richtext}} </div>
+    #將page定義的intro插入在頁面中    {% for post in page.get_children %}       <h2><a href="{% pageurl post %}>{{post.title}}</a></h2>       {{post.specific.intro}}
+       #如果不希望索引頁出現內文請不要加入以下這行
+       {{post.specific.body|richtext}}     {% endfor %} 
+     #這一整段是為了將部落格的標題和intro放到部落格的索引頁中 
+     #get_children 代表 附屬在索引頁的子頁面（貼文）{% endblock %}
+
+[blog_page1.html]
+# template/blog/blog_page.html{% extends "base.html" %}
+{% load wagtailcore_tags %}{% block body_class %}template-blogpage{% endblock %}{% block content %}
+    <h1> {{page.title}} </h1> #將 Title標題 以h1大標題顯示
+    <p class="meta">{{ page.date}}</p> 
+    <div class="intro">{{page.intro}}</div>{{page.body|richtext}}
+    <p><a href="{{page.get_parent.url }}">Return to blog</a></p># 以下新加入可以顯示tags的程式碼   {% if page.tags.all.count %} 
+<div class=”tags”> 
+	<h3>Tags</h3> {% for tag in page.tags.all %}
+ <a href=”{% slugurl ‘tags’ %}?tag={{ tag }}”><button type=”button”>{{ tag }}</button></a> 
+{% endfor %}
+ </div> 
+{% endif %}
+{% endblock %}
+
+[models3.py]
+# blog/models.py
+from django.db import models
+from modelcluster.fields import ParentalKey 
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase 
+from wagtail.core.models import Page, Orderable 
+from wagtail.core.fields import RichTextField 
+from wagtail.admin.edit_handlers import FieldPanel,MultiFieldPanel 
+from wagtail.search import index 
+class BlogIndexPage(Page):
+    intro = RichTextField(blank=True)
+    content_panels = Page.content_panels + [
+        FieldPanel('intro', classname="full")
+    ]
+class BlogTagIndexPage(Page): 
+    def get_context(self, request): # Filter by tag 
+        tag = request.GET.get('tag') 
+        blogpages = BlogPage.objects.filter(tags__name=tag) 
+        context = super().get_context(request) 
+        context['blogpages'] = blogpages                            # 更新context，在之後template的時候會用到 
+        return context
+class BlogPageTag(TaggedItemBase): 
+    content_object = ParentalKey(                   'BlogPage',
+    related_name='tagged_items', 
+    on_delete=models.CASCADE )
+class BlogPage(Page): 
+    date = models.DateField('Post date') 
+    intro = models.CharField(max_length=250) 
+    body = RichTextField(blank=True) 
+    tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
+    search_field = Page.search_fields + [
+            index.SearchField('intro'),
+            index.SearchField('body'),
+        ]
+    content_panels = Page.content_panels + [
+    MultiFieldPanel([
+    FieldPanel('date'),
+    FieldPanel('tags'), ],
+    heading='Blog information'
+    ),
+    FieldPanel('intro'),
+    FieldPanel('body'),
+]
+
+[blog_page2.html]
+# template/blog/blog_page.html{% extends "base.html" %}
+{% load wagtailcore_tags %}{% block body_class %}template-blogpage{% endblock %}{% block content %}
+    <h1> {{page.title}} </h1> #將 Title標題 以h1大標題顯示
+    <p class="meta">{{ page.date}}</p> 
+    <div class="intro">{{page.intro}}</div>{{page.body|richtext}}
+    <p><a href="{{page.get_parent.url }}">Return to blog</a></p># 以下新加入可以顯示tags的程式碼   {% if page.tags.all.count %} 
+<div class=”tags”> 
+	<h3>Tags</h3> {% for tag in page.tags.all %}
+ <a href=”{% slugurl ‘tags’ %}?tag={{ tag }}”><button type=”button”>{{ tag }}</button></a> 
+{% endfor %}
+ </div> 
+{% endif %}
+{% endblock %}
+
+[blog_tag_index_page1.html]
+# template/blog/blog_tag_index_page.html
+{% extends "base.html" %} 
+{% load wagtailcore_tags %}  
+{% block content %}      
+{% if request.GET.tag|length %}       
+  <h4>Showing pages tagged "{{ request.GET.tag }}"</h4>    
+{% endif %}{% for blogpage in blogpages %}            
+<p>  <strong>
+<a href="{% pageurl blogpage %}">{{ blogpage.title }}</a>
+</strong>
+<br/>              <small>Revised: {{ blogpage.latest_revision_created_at }}</small><br/>               {% if blogpage.author %}                 
+<p>By {{ blogpage.author.profile }}</p>               
+{% endif %}           
+</p>      {% empty %}     
+No pages found with that tag.     
+{% endfor %}  {% endblock %}
