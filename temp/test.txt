@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!--20220302: my Exercise Editor by Leo Chan-->
+<html lang="en">
+<head>
+	<title>my Editor</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"-->
+	<link rel="stylesheet" href="https://www.w3schools.com/lib/w3schools30.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+	<style>
+		body, h1, h2, h3, h4, h5, h6 {font-family: "Times New Roman", Times, serif;}
+		body {background-color: antiquewhite;}
+		.div_viewer { 
+			background-color: #f1f1f1; border: 1px solid #d3d3d3; width:600px;height:200px; }
+		.div_header { padding: 10px; cursor: move; background-color: #2196F3; color: #fff;}
+		.ID_QNUM  {padding-left:3px;width:35px;}
+		.ID_QTEXT {padding-left:3px}
+		.ID_MC   {margin-top:0px}
+		.BTN_MC  {margin:0;margin-right:20px;margin-left:50px;padding-top:1px;padding-bottom:1px;padding-left:5px;padding-right:5px;}
+		.ID_FIGURE:hover {transform: scale(2);}
+		</style>
+	<!--script>MathJax.Hub.Config({tex2jax: {inlineMath: [['$$','$$'], ['\\(','\\)']]}});</script-->
+  	<script>
+		function body_onload() {
+			var v_top=document.querySelector('.div_container1').getBoundingClientRect().top;
+			document.getElementsByClassName('div_container1')[0].style.height=(window.innerHeight-v_top-10)+'px';
+			}
+		</script>
+	</head>
+<body onload="body_onload()">
+<div class="w3-top w3-bar w3-black w3-card w3-container"                                                    data-note='top bar'>
+	<div class='w3-right'>User: {{user_gmail}}
+    <a href='{{user_logout}}' title='logout and select another account'>
+    <span class="glyphicon glyphicon-log-out" style='padding:0'></span>
+    </a><br>Date:
+		<script>document.write(new Date().toISOString().substr(0,10))</script>
+		</div>
+	<h3 title='my Exercise by LC-solution'>編輯練習題(測試版)</h3>
+	</div>
+
+<div data-note="container0" class="div_container0 w3-container" style='width:100%;height:90%'>
+<!-- Page Start -->
+<div style='margin-top:60px'><span class='msg0'>編輯練習</span></div>
+<span                                                                                                       data-note='DIV(TableViewer)['/>
+<div id="VIEW0" class='div_viewer w3-card-4 w3-container' style='padding:0;width:100%;height:90%'>
+	</div>
+<span                                                                                                        data-note='DIV(TableViewer)]'/>
+<span                                                                                                        data-note='TableContainer['/>
+<div class="div_container1 w3-container" style="height:400px;width:100%;overflow:auto;margin:0;padding:0;padding-bottom: 20px;resize:vertical">
+<script> 
+/*jshint multistr: true */
+function text2latex(v_str,v_option='') {
+	var i,j,k,v_latex,v_out,img_style;
+	let result=[];
+	for (let i=0;i>-1;) {
+		k =v_str.substr(i).indexOf('$$');
+		if (k==-1) {break;} else {i=i+k}
+		k =v_str.substr(i+2).indexOf('$$');
+		if (k==-1) {break;} else {j=i+k+3}
+		result.push(i); result.push(j);
+		i=j+2;
+		}
+	//console.log('text2latex=v_str',v_str);
+	if (result.length==0) {return v_str;}
+	result.push(v_str.length);
+	v_out =v_str.slice(0,result[0]);
+	img_style="vertical-align:middle";
+	img_style="";
+	if (v_option=='X1') {img_style="vertical-align:middle;width:30%";}
+	for (n=0; n<result.length;n=n+2) {
+		i =result[n];
+		j =result[n+1];
+		k =result[n+2];
+		v_latex =encodeURIComponent(v_str.slice(i,j+1).replace("$$",""));
+		v_out +='<img src="https://i.upmath.me/svg/#v_latex#" style="#img_style#"></img>'.replace('#v_latex#',v_latex).replace("#img_style#",img_style);
+		if (j+1<k) {v_out +=v_str.slice(j+1,k);}
+		}
+	// if (v_option.length>0) {console.log('v_option=',v_option);}
+	//console.log('text2latex=',v_out);
+	return v_out;
+	}
+$(document).ready(function(){
+});
+
+function preview_update(me,target_obj) {
+	let obj0=document.querySelector(target_obj);
+	let obj1=document.querySelector('.apply_latex');
+	obj0.innerHTML=(obj1.checked==true)?text2latex(me.value):me.value;
+    if (target_obj=='.ID_QNUM'){// it is QID and load exercise data
+        $.getJSON('/load_json',{task:'editExerciseLoad',qid:me.value},function( returnValue, status ){
+            console.log('status =',status, ' ;returnValue=',returnValue);
+            let obj1=document.querySelector('.exerciseData').elements;
+            obj1.namedItem('Q').value=returnValue['Q']; preview_update(obj1.namedItem('Q'),".ID_QTEXT");
+            obj1.namedItem('A').value=returnValue['A']; preview_update(obj1.namedItem('A'),".MC_A");
+            obj1.namedItem('B').value=returnValue['B']; preview_update(obj1.namedItem('B'),".MC_B");
+            obj1.namedItem('C').value=returnValue['C']; preview_update(obj1.namedItem('C'),".MC_C");
+            obj1.namedItem('D').value=returnValue['D']; preview_update(obj1.namedItem('D'),".MC_D");
+            obj1.namedItem('ANS').value=returnValue['ANS'];
+            obj1.namedItem('FIGURE').value=returnValue['FIGURE']; document.querySelector(".ID_FIGURE").src =obj1.namedItem('FIGURE').value;
+            obj1.namedItem('REMARK').value=returnValue['remark'];
+            alert('Exercise loaded');
+            })};
+	}
+</script>
+
+<span data-type='----------------------------------'                                                         data-note='test only['/>
+<div class="ID_QLIST w3-row w3-border w3-white" style='padding-top:20px'>
+<div class="ID_QUESTION w3-third w3-container"><div class='w3-bar w3-black'>
+<form class='exerciseData' target='_blank' action='/newExercise' method='get'>
+    編輯:<input class='apply_latex w3-right' type=checkbox value='apply latex' title='apply latex formula'></div><p></p>
+<label>Question:</label>
+		<select name='ANS' class='w3-right'><option>A</option><option>B</option><option>C</option><option>D</option></select>
+		<label class='w3-right'>ANS:</label>
+	<div class='w3-row'>
+	<div class='w3-col' style='width:40px;'><input value='Q99' oninput='preview_update(this,".ID_QNUM")'></div >
+	<div class='w3-rest'>
+		<textarea name='Q' style='width:90%' oninput='preview_update(this,".ID_QTEXT")'>Question details ...The cumulative frequency curve below shows the distribution of the monthly income (in dollars) of the people in a city.</textarea></div >
+	</div>
+<p></p>
+<div class='w3-half'><label>A.</label><br><textarea name='A' oninput='preview_update(this,".MC_A")'><img style='vertical-align:middle' src='https://i.upmath.me/svg/x+y'></textarea></div>
+<div class='w3-half'><label>B.</label><br><textarea name='B' oninput='preview_update(this,".MC_B")'>...</textarea></div><p></p>
+<div class='w3-half'><label>C.</label><br><textarea name='C' oninput='preview_update(this,".MC_C")'>...</textarea></div>
+<div class='w3-half'><label>D.</label><br><textarea name='D' oninput='preview_update(this,".MC_D")'>...</textarea></div>
+<label>Figure source URL:</label>
+<input name='FIGURE' style='width:90%' oninput='document.querySelector(".ID_FIGURE").src =this.value' value="https://raw.githubusercontent.com/leo202103/public_area/main/img/exercise112.jpg">
+<label>Remark:</label>
+<input name='REMARK' style='width:90%'>
+<input class='w3-right' type=submit value='Add'/>
+</form>
+    </div>
+<script>
+    document.querySelector('.exerciseData').onsubmit =(me)=> {
+        me.preventDefault();
+        let obj0 =me.target;
+        params={};
+        for (let x of obj0.elements)
+        {if (x.name!='') {params[x.name]=x.value;}};
+        console.log('obj0.method=',obj0.method,' ;params=',params);
+        if (obj0.method=='get') {
+        $.getJSON(obj0.action,params,function( returnValue, status ){
+            console.log('status =',status, ' ;returnValue=',returnValue);
+            alert('Exercise added');
+            })};
+        }
+    </script>
+
+<div class="ID_QUESTION w3-third w3-container"><div class='w3-bar w3-green'>
+    Preview:</div><p></p>
+	<div class='w3-row' style='margin-bottom: 20px;'>
+	<div class='ID_QNUM w3-col' style='width:40px;'>Q99</div >
+	<div class='ID_QTEXT w3-rest'>Question details ...The cumulative frequency curve below shows the distribution of the monthly income (in dollars) of the people in a city.</div >
+	</div>
+	<div class='ID_MC'>
+<img class="ID_FIGURE w3-right w3-hide" style='width:50%' src="https://raw.githubusercontent.com/leo202103/public_area/main/img/exercise112.jpg"/>
+<div class="w3-button BTN_MC">A.</div><span class='MC_A'><img src='https://i.upmath.me/svg/x%3D%5Cfrac%7B2-y%7D%7B1-y%7D%24%24'>...</span><p></p>
+<div class='w3-button BTN_MC'>B.</div><span class='MC_B'>...</span><p></p>
+<div class="w3-button BTN_MC">C.</div><span class='MC_C'>...</span><p></p>
+<div class="w3-button BTN_MC">D.</div><span class='MC_D'>...</span><p></p>
+    </div>
+	</div>
+<div class="ID_QUESTION w3-third w3-container"><div class='w3-bar w3-blue'>
+    Sample:</div><p></p>
+	<div class='w3-row'>
+	<div class='ID_QNUM w3-col' style='width:40px;'>Q99</div >
+	<div class='ID_QTEXT w3-rest'>Question details ...The cumulative frequency curve below shows the distribution of the monthly income (in dollars) of the people in a city.</div >
+	</div>
+	<p class='ID_MC'>
+<img class="ID_FIGURE" style='width:50%;float:right' src="https://raw.githubusercontent.com/leo202103/public_area/main/img/exercise112.jpg">
+<div class="w3-button BTN_MC">A.</div><img style='vertical-align:middle' src='https://i.upmath.me/svg/x+y'><p></p>
+<div class='w3-button BTN_MC'>B.</div>...<p></p>
+<div class="w3-button BTN_MC">C.</div>...<p></p>
+<div class="w3-button BTN_MC">D.</div>...<p></p>
+	</p>
+	</div>
+	</div>
+<span data-type='----------------------------------'                                                         data-note='test only]'/>
+<div data-note='footnotes' style='height:2cm'>...</div>
+	</div>
+<span data-type='----------------------------------'                                                         data-note='TableContainer]'/>
+<span data-type='----------------------------------'                                                         data-note='DIV(TableViewer)]'/>
+
+<!-- Page End -->
+	</div><!--div_container0-->
+    <span                                                                          data-note='------------- Modal: modal01-msg---------('/>
+    <div class="w3-modal modal01-msg">
+        <div class="w3-modal-content w3-display-container" style='width: 500px;'>
+            <div class="w3-card" style='padding:0px; min-height: 300px;'>
+                <div class='div_header w3-display-topmiddle w3-center w3-blue' style='width:100%;height:40px;padding-top: 10px;'
+                >Message</div>
+                <span class="w3-button w3-display-topright" style='height:40px'
+                onclick="this.parentElement.parentElement.parentElement.style.display='none'" 
+                >&times;</span>
+                <div class="modal02-msg w3-display-middle">System Message ...</div>
+                </div>
+            </div>
+        </div>
+    
+    <script>
+    function prompt_msg(msg,msg_html='') {
+        document.querySelector('.modal02-msg').innerText =msg;
+        if (msg_html.length>0) {document.querySelector('.modal02-msg').innerHTML =msg_html;}
+        document.querySelector('.modal02-msg').title=msg;
+        if (msg.length>255 && msg_html=='') {document.querySelector('.modal02-msg').innerText=msg.substr(0,255).concat('..');}
+        document.querySelector('.modal01-msg').style.display='block';
+        }
+        </script>
+    <span                                                                          data-note='------------- Modal: modal01-msg---------)'/>
+    
+	</body>
+	</html>
