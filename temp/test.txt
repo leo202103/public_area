@@ -157,7 +157,7 @@ function preview_update(me,target_obj) {
 	<div class='ID_MC'>
 <img class="ID_FIGURE w3-right w3-hide" style='width:50%' src="https://raw.githubusercontent.com/leo202103/public_area/main/img/exercise112.jpg"/>
 <div class="w3-button BTN_MC">A.</div><span class='MC_A'><img src='https://i.upmath.me/svg/x%3D%5Cfrac%7B2-y%7D%7B1-y%7D%24%24'>...</span><p></p>
-<div class='w3-button BTN_MC'>B.</div><span class='MC_B'>...</span><p></p>
+<div class='w3-button BTN_MC'>B.</div><span class='MC_B'><img src='https://i.upmath.me/svg/x%3D%5Cfrac%7B2-y%7D%7B1-y%7D%24%24'>...</span><p></p>
 <div class="w3-button BTN_MC">C.</div><span class='MC_C'>...</span><p></p>
 <div class="w3-button BTN_MC">D.</div><span class='MC_D'>...</span><p></p>
     </div>
