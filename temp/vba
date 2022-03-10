@@ -1,0 +1,33 @@
+Sub ¥¨¶°1()
+'
+' ¥¨¶°1 ¥¨¶°
+'
+
+'
+    ActiveWorkbook.Queries.Add Name:="Table 0 (3)", Formula:= _
+        "let" & Chr(13) & "" & Chr(10) & "    ¨Ó·½ = Web.Page(Web.Contents(""https://hk.finance.yahoo.com/quote/0066.HK/history?filter=div""))," & Chr(13) & "" & Chr(10) & "    Data0 = ¨Ó·½{0}[Data]," & Chr(13) & "" & Chr(10) & "    ¤wÅÜ§óÃþ«¬ = Table.TransformColumnTypes(Data0,{{""¤é´Á"", type date}, {""ªÑ®§"", type text}, {""Column3"", type text}, {""Column4"", type text}, {""Column5"", type text}, {""Column6"", type text}, {""Column7"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    ¤wÅÜ§óÃþ«¬"
+    ActiveWorkbook.Worksheets.Add
+    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=""Table 0 (3)"";Extended Properties=""""" _
+        , Destination:=Range("$A$1")).QueryTable
+        .CommandType = xlCmdSql
+        .CommandText = Array("SELECT * FROM [Table 0 (3)]")
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .BackgroundQuery = True
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .SaveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .PreserveColumnInfo = True
+        .ListObject.DisplayName = "Table_0__3"
+        .Refresh BackgroundQuery:=False
+    End With
+    Selection.Copy
+    Sheets("¤u§@ªí1").Select
+    Selection.PasteSpecial Paste:=xlPasteValuesAndNumberFormats, Operation:= _
+        xlNone, SkipBlanks:=False, Transpose:=False
+End Sub
