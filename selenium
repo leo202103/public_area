@@ -1,0 +1,76 @@
+Task: Try python selenium to scrap html
+
+1. Doc
+https://www.learncodewithmike.com/2020/05/python-selenium-scraper.html
+
+2. download and install selenium (ChromeDriver 108.0.5359.71)
+pip install selenium
+https://chromedriver.chromium.org/downloads
+
+3. script
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import time
+from bs4 import BeautifulSoup
+options = Options()
+options.add_argument("--disable-notifications") 
+chrome = webdriver.Chrome(executable_path=r'C:\temp\chromedriver.exe', options=options)
+time.sleeps(3)
+chrome.get("http://www.bom.gov.au/climate/ocean/outlooks/index.shtml#region=NINO34")
+soup = BeautifulSoup(chrome.page_source, 'html.parser')
+r=soup.select('#probTable')
+r
+
+4. output
+[<table class="table-text columns" id="probTable" summary="Monthly index values and frequency distributions. The first month row includes buttons to display graphs for each month.">
+<caption><b>NINO34 probabilities</b> </caption>
+<thead>
+<tr>
+<th scope="row">Month</th>
+<th scope="col">Jan 2023</th>
+<th scope="col">Feb 2023</th>
+<th scope="col">Mar 2023</th>
+<th scope="col">Apr 2023</th>
+<th scope="col">May 2023</th>
+<th scope="col">Jun 2023</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">NINO34</th>
+<td>-0.6?</td>
+<td>-0.2?</td>
+<td>0.2?</td>
+<td>0.4?</td>
+<td>0.8?</td>
+<td>1.0?</td>
+</tr>
+<tr>
+<th scope="row">below -0.8?</th>
+<td>0%</td>
+<td>0%</td>
+<td>0%</td>
+<td>0%</td>
+<td>0%</td>
+<td>0%</td>
+</tr>
+<tr>
+<th scope="row">neutral</th>
+<td>100%</td>
+<td>100%</td>
+<td>100%</td>
+<td>96.0%</td>
+<td>45.5%</td>
+<td>9.1%</td>
+</tr>
+<tr>
+<th scope="row">above 0.8?</th>
+<td>0%</td>
+<td>0%</td>
+<td>0%</td>
+<td>4.0%</td>
+<td>54.5%</td>
+<td>90.9%</td>
+</tr>
+</tbody>
+</table>]
