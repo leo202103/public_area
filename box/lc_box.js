@@ -31,7 +31,7 @@ function unit_test_only(item=02) {
     console.log(new Date().getTimezoneOffset())
   }
   if (item==2) {
-    console.log(new Date().format())   // 2023-10-12 23:29:47.742+0800
+    console.log(new Date().format_old())   // 2023-10-12 23:29:47.742+0800
   }
 }
 
