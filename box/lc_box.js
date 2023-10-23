@@ -1,1 +1,1 @@
-function test(){console.log('test1023'));
+function test(){console.log('test1023')};
