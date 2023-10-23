@@ -1,3 +1,5 @@
+##import requests
+##exec(requests.get('https://raw.githubusercontent.com/leo202103/public_area/main/box/lc_box.py').text)
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
@@ -267,8 +269,8 @@ class lc_session():
 		self.dsname =lambda s: s if len(s.split('.'))<2 else s.split('.')[1]
 		self.empty('work')
 		print(self)
-	def test(self):
-		print('test')
+	def readme(self):
+		print('readme: lc_session().readme()')
 	def sample_csv(self,p_file='sample_file.csv',nobs=None):
 		v_size,v_mode,v_header=nobs if nobs else self.chunk_size,'w',True
 		while v_size>0:
@@ -325,3 +327,7 @@ class lc_session():
 	def load_url(self,url):
 		headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
 		return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
+'''
+s=lc_session()
+s.readme()
+'''
