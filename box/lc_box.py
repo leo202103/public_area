@@ -3,7 +3,7 @@
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
-Date: 20230908,1009,1014,1015
+Date: 20230908,1009,1014,1015,1023
 Desc: lc python tool-box
 Test Script:
 import sys
@@ -327,6 +327,26 @@ class lc_session():
 	def load_url(self,url):
 		headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
 		return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
+	def gs_get(self,gs_name):
+		import requests, json
+		v_url='https://script.google.com/macros/s/AKfycbwzSMDlB6faBhW7YBtOIYeZeJ-nLE220K3w7XtyEkHNmqyVO1ITnVitWI9TL1Okm-bEQA/exec'
+		response = requests.get(v_url,{"gs_get":json.dumps({"srcname":gs_name})})
+		return json.loads(response.text)
+	def df_get(self,gs=None,csv=None,pickle=None,fwf=None,sas=None,sep=",",colspecs=[(1,10)], header=None, names=None):
+		##(20231003)load google spreadsheet or csv to pandas dataframe
+		import pandas as pd, json
+		if gs: 
+			gs_data=self.gs_get(gs)
+			return pd.DataFrame(list(map(lambda r:list(map(lambda c:r.get(c,''),gs_data['cols'])),gs_data['rows']['values'])),columns=gs_data['cols'])
+		if csv: return pd.read_csv(csv,sep=sep)
+		if pickle: return pd.read_pickle(pickle)
+		if fwf: return pd.read_fwf(fwf,colspecs=colspecs, header=header, names=names)                    ## fix-column width file
+		if sas: return pd.read_sas(sas)
+		return "err: Neither parameter gs, csv, pickle, fwf or excel parameter not found"
+		## lc_box.df_get(gs='sashelp.class')
+		## lc_box.df_get(csv='//app/data/sample_large_df.zip')
+		## lc_box.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
+		## lc_box.df_get(sas='//app/data/airline.sas7bdat')
 '''
 s=lc_session()
 s.readme()
