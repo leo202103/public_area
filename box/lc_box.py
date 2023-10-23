@@ -257,7 +257,7 @@ def logmsg(p_msg):
     print(date_put(datetime.datetime.now())[:19],p_msg)
 
 class lc_session():
-	def __init__(self,userparm):
+	def __init__(self,userparm={}):
 		self.chunk_size=userparm.get('chunk_size',50000)                                       ## limit to 500000 rows for each chunk
 		self.lib={'work':userparm.get('work','./work'), 'user':userparm.get('user','./user')}
 		self.libname=lambda s: 'work' if len(s.split('.'))<2 else s.split('.')[0]
