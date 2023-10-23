@@ -258,6 +258,9 @@ def logmsg(p_msg):
 
 class lc_session():
 	def __init__(self,userparm={}):
+		import urllib,time,ssl
+		self.context = ssl.create_default_context()
+		self.context.set_ciphers('DEFAULT@SECLEVEL=1')
 		self.chunk_size=userparm.get('chunk_size',50000)                                       ## limit to 500000 rows for each chunk
 		self.lib={'work':userparm.get('work','./work'), 'user':userparm.get('user','./user')}
 		self.libname=lambda s: 'work' if len(s.split('.'))<2 else s.split('.')[0]
@@ -319,3 +322,6 @@ class lc_session():
 	def close_all_stores(self):
 		for x in filter(lambda x:isinstance(x,pd.HDFStore),gc.get_objects()): x.close()
 		logmsg(f'close all HDFStore')
+	def load_url(self,url):
+		headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
+		try: return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
