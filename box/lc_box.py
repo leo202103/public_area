@@ -324,4 +324,4 @@ class lc_session():
 		logmsg(f'close all HDFStore')
 	def load_url(self,url):
 		headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
-		try: return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
+		return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
