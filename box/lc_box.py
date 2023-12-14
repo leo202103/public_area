@@ -3,11 +3,11 @@
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
-Date: 20230908,1009,1014,1015,1023
+Date: 20230908,1009,1014,1015,1023,1209,1214
 Desc: lc python tool-box
 Test Script:
 import sys
-sys.path.append('D:\\temp\\0806')
+sys.path.append('D:\\temp')
 import importlib, lc_box
 importlib.reload(lc_box)                # Reload the module
 '''
@@ -270,7 +270,25 @@ class lc_session():
 		self.empty('work')
 		print(self)
 	def readme(self):
-		print('readme: lc_session().readme()')
+		print('''readme: lc_session().readme()
+by: Leo CHAN
+version: 20231209
+test script:
+import sys,requests
+exec(requests.get('https://raw.githubusercontent.com/leo202103/public_area/main/box/lc_box.py').text)
+sys.path.append('D:\\temp\\0806')
+import importlib, lc_box
+importlib.reload(lc_box)                # Reload the module
+lc_box1 =lc_box.lc_session()
+lc_box1.readme()
+lc_box1.get_keys('user')
+lc_box1.df_get(gs='sashelp.class')
+lc_box1.df_get(csv='//app/data/sample_large_df.zip')
+lc_box1.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
+lc_box1.df_get(sas='//app/data/airline.sas7bdat')
+lc_box.sample_large_df(90000)
+lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
+		''')
 	def sample_csv(self,p_file='sample_file.csv',nobs=None):
 		v_size,v_mode,v_header=nobs if nobs else self.chunk_size,'w',True
 		while v_size>0:
@@ -286,7 +304,7 @@ class lc_session():
 		return v_df
 	def get_df(self,df_name):
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
-		v_df=v_store.get(self.dsname(df_name))
+		v_df=v_store.get('/'+self.dsname(df_name))
 		v_store.close()
 		return v_df
 	def put_df(self,df_name,p_df):
@@ -297,7 +315,9 @@ class lc_session():
 		return p_df
 	def sort(self,df_name,by=None,out=None):
 		v_df=self.get_df(df_name)
-		return self.put_df(out if out else df_name,v_df.sort_values(by,ignore_index=True))
+		self.put_df(out if out else df_name,v_df.sort_values(by,ignore_index=True))
+		logmsg(f'NOTE: Sorting data {df_name} by {by} completes successfully.')
+		return 0
 	def get_keys(self,libref):
 		v_store =pd.HDFStore(self.lib[libref])
 		v_keys =v_store.keys()
@@ -347,6 +367,13 @@ class lc_session():
 		## lc_box.df_get(csv='//app/data/sample_large_df.zip')
 		## lc_box.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
 		## lc_box.df_get(sas='//app/data/airline.sas7bdat')
+	def date_put(self,dt,tz='Asia/Hong_Kong'):
+		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
+		import datetime, pytz
+		return datetime.datetime.strftime(dt.astimezone(pytz.timezone(tz)),'%Y-%m-%d %H:%M:%S.%f%z')
+	def logmsg(self,p_msg):
+		import datetime
+		print(self.date_put(datetime.datetime.now())[:19],p_msg)
 '''
 s=lc_session()
 s.readme()
