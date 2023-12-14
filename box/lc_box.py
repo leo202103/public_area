@@ -288,6 +288,7 @@ lc_box1.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A',
 lc_box1.df_get(sas='//app/data/airline.sas7bdat')
 lc_box1.print_df('user.df_test')
 lc_box1.sort('user.df_test',by=['C2','C3'])
+lc_box1.select('user.df_test',start=n-6)
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
