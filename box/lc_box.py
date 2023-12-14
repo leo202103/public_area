@@ -315,7 +315,9 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		return p_df
 	def sort(self,df_name,by=None,out=None):
 		v_df=self.get_df(df_name)
-		self.put_df(out if out else df_name,v_df.sort_values(by,ignore_index=True))
+		v_df=v_df.sort_values(by)
+		## self.put_df(out if out else df_name,v_df.sort_values(by,ignore_index=True))
+		self.put_df(out if out else df_name,v_df)
 		logmsg(f'NOTE: Sorting data {df_name} by {by} completes successfully.')
 		return 0
 	def get_keys(self,libref):
