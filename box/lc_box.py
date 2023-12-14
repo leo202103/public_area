@@ -286,6 +286,8 @@ lc_box1.df_get(gs='sashelp.class')
 lc_box1.df_get(csv='//app/data/sample_large_df.zip')
 lc_box1.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
 lc_box1.df_get(sas='//app/data/airline.sas7bdat')
+lc_box1.print_df('user.df_test')
+lc_box1.sort('user.df_test',by=['C2','C3'])
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
@@ -305,6 +307,11 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 	def get_df(self,df_name):
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
 		v_df=v_store.get('/'+self.dsname(df_name))
+		v_store.close()
+		return v_df
+	def select(self,df_name, where=None, start=None, stop=None, columns=None):
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
+		v_df=v_store.select('/'+self.dsname(df_name), where, start, stop, columns)
 		v_store.close()
 		return v_df
 	def print_df(self,df_name):
