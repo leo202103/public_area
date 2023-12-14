@@ -292,27 +292,35 @@ lc_box1.select('user.df_test',start=n-6)
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
-	def sample_csv(self,p_file='sample_file.csv',nobs=None):
-		v_size,v_mode,v_header=nobs if nobs else self.chunk_size,'w',True
-		while v_size>0:
-			sample_large_df(min(v_size,self.chunk_size)).to_csv(p_file,index=False,mode=v_mode,header=v_header,chunksize=10000)
-			v_size,v_mode,v_header=v_size-min(v_size,self.chunk_size),'a',False
-			##print(f'{v_size} rows being process')
-	def get_csv(self,p_file,df_name):
-		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
-		v_df =pd.read_csv(p_file)
-		v_store.put(self.dsname(df_name), v_df)
-		print(f'Get CSV from file={p_file} to df_name={df_name}')
+	def date_put(self,dt,tz='Asia/Hong_Kong'):
+		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
+		import datetime, pytz
+		return datetime.datetime.strftime(dt.astimezone(pytz.timezone(tz)),'%Y-%m-%d %H:%M:%S.%f%z')
+	def logmsg(self,p_msg):
+		import datetime
+		print(self.date_put(datetime.datetime.now())[:19],p_msg)
+	def get_keys(self,libref):
+		v_store =pd.HDFStore(self.lib[libref])
+		v_keys =v_store.keys()
+		v_store.close()
+		return v_keys
+	def empty(self,libref):                                           ## empty a library (store)
+		import numpy as np, pandas as pd
+		v_store=pd.HDFStore(self.lib[libref],'w')
+		for k in v_store.keys(): v_store.remove(k)
+		v_store.close()
+		logmsg(f'Store {libref} is cleared')
+	def close_all_stores(self):
+		for x in filter(lambda x:isinstance(x,pd.HDFStore),gc.get_objects()): x.close()
+		logmsg(f'close all HDFStore')
+	def select(self,df_name, where=None, start=None, stop=None, columns=None):
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
+		v_df=v_store.select('/'+self.dsname(df_name), where, start, stop, columns)
 		v_store.close()
 		return v_df
 	def get_df(self,df_name):
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
 		v_df=v_store.get('/'+self.dsname(df_name))
-		v_store.close()
-		return v_df
-	def select(self,df_name, where=None, start=None, stop=None, columns=None):
-		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
-		v_df=v_store.select('/'+self.dsname(df_name), where, start, stop, columns)
 		v_store.close()
 		return v_df
 	def print_df(self,df_name):
@@ -335,11 +343,19 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		self.put_df(out if out else df_name,v_df)
 		logmsg(f'NOTE: Sorting data {df_name} by {by} completes successfully.')
 		return 0
-	def get_keys(self,libref):
-		v_store =pd.HDFStore(self.lib[libref])
-		v_keys =v_store.keys()
+	def sample_csv(self,p_file='sample_file.csv',nobs=None):
+		v_size,v_mode,v_header=nobs if nobs else self.chunk_size,'w',True
+		while v_size>0:
+			sample_large_df(min(v_size,self.chunk_size)).to_csv(p_file,index=False,mode=v_mode,header=v_header,chunksize=10000)
+			v_size,v_mode,v_header=v_size-min(v_size,self.chunk_size),'a',False
+			##print(f'{v_size} rows being process')
+	def get_csv(self,p_file,df_name):
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
+		v_df =pd.read_csv(p_file)
+		v_store.put(self.dsname(df_name), v_df)
+		print(f'Get CSV from file={p_file} to df_name={df_name}')
 		v_store.close()
-		return v_keys
+		return v_df
 	def xget_csv(self,p_file,df_name):                               ##read in chunk
 		import numpy as np, pandas as pd
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
@@ -352,15 +368,6 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		v_store.put(self.dsname(df_name),pd.Series(v_df))
 		v_store.close()
 		return v_df
-	def empty(self,libref):                                           ## empty a library (store)
-		import numpy as np, pandas as pd
-		v_store=pd.HDFStore(self.lib[libref],'w')
-		for k in v_store.keys(): v_store.remove(k)
-		v_store.close()
-		logmsg(f'Store {libref} is cleared')
-	def close_all_stores(self):
-		for x in filter(lambda x:isinstance(x,pd.HDFStore),gc.get_objects()): x.close()
-		logmsg(f'close all HDFStore')
 	def load_url(self,url):
 		headers={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
 		return urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=self.context).read()
@@ -384,13 +391,6 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		## lc_box.df_get(csv='//app/data/sample_large_df.zip')
 		## lc_box.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
 		## lc_box.df_get(sas='//app/data/airline.sas7bdat')
-	def date_put(self,dt,tz='Asia/Hong_Kong'):
-		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
-		import datetime, pytz
-		return datetime.datetime.strftime(dt.astimezone(pytz.timezone(tz)),'%Y-%m-%d %H:%M:%S.%f%z')
-	def logmsg(self,p_msg):
-		import datetime
-		print(self.date_put(datetime.datetime.now())[:19],p_msg)
 '''
 s=lc_session()
 s.readme()
