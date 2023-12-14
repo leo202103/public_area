@@ -307,6 +307,13 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		v_df=v_store.get('/'+self.dsname(df_name))
 		v_store.close()
 		return v_df
+	def print_df(self,df_name):
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
+		v_df=v_store.get('/'+self.dsname(df_name))
+		v_store.close()
+		print(v_df)
+		logmsg(f'NOTE: Printing of data {df_name} completes successfully.')
+		return 0
 	def put_df(self,df_name,p_df):
 		##print(self.lib[self.libname(df_name)])
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
