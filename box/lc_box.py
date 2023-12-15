@@ -289,6 +289,7 @@ lc_box1.df_get(sas='//app/data/airline.sas7bdat')
 lc_box1.print_df('user.df_test')
 lc_box1.sort('user.df_test',by=['C2','C3'])
 lc_box1.select('user.df_test',start=n-6)
+lc_box1.spotify().search(q='I\'m Tied, To You', type='album')
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
@@ -391,6 +392,22 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		## lc_box.df_get(csv='//app/data/sample_large_df.zip')
 		## lc_box.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
 		## lc_box.df_get(sas='//app/data/airline.sas7bdat')
+	def spotify(self):
+		import spotipy
+		from spotipy.oauth2 import SpotifyOAuth
+		CLIENT_ID = 'a7aa531b72d64e1999dcbf3e87ff78da'
+		CLIENT_SECRET = input('CLIENT_SECRET:')  ### cb36887db65f4b90abca145537643a1a'
+		scopes = ["user-follow-read", 'ugc-image-upload', 'user-read-playback-state',
+		          'user-modify-playback-state', 'user-read-currently-playing', 'user-read-private',
+		          'user-read-email', 'user-follow-modify', 'user-follow-read', 'user-library-modify',
+		          'user-library-read', 'streaming', 'app-remote-control', 'user-read-playback-position',
+		          'user-top-read', 'user-read-recently-played', 'playlist-modify-private', 'playlist-read-collaborative',
+		          'playlist-read-private', 'playlist-modify-public']
+		return spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID,
+		                                               client_secret=CLIENT_SECRET,
+		                                               redirect_uri='http://localhost:8887/callback',
+		                                               scope=scopes, open_browser=False))
+
 '''
 s=lc_session()
 s.readme()
