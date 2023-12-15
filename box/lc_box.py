@@ -396,7 +396,7 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		import spotipy
 		from spotipy.oauth2 import SpotifyOAuth
 		CLIENT_ID = 'a7aa531b72d64e1999dcbf3e87ff78da'
-		CLIENT_SECRET = input('CLIENT_SECRET:')  ### cb36887db65f4b90abca145537643a1a'
+		CLIENT_SECRET = input('CLIENT_SECRET:')
 		scopes = ["user-follow-read", 'ugc-image-upload', 'user-read-playback-state',
 		          'user-modify-playback-state', 'user-read-currently-playing', 'user-read-private',
 		          'user-read-email', 'user-follow-modify', 'user-follow-read', 'user-library-modify',
