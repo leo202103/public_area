@@ -143,7 +143,7 @@ def df_from_cards(v_cards,v_dlm=','):
     ##(20230929): create dataframe from multi-line string similiar to SAS cards
     import pandas as pd
     if not v_cards: return None
-    return pd.DataFrame(list(map(lambda r:r.split(v_dlm),v_cards.split('\n')[1:])),columns=v_cards.split('\n')[0].split(v_dlm))
+    return pd.DataFrame(list(map(lambda r:r.split(v_dlm),v_cards.strip().split('\n')[1:])),columns=v_cards.strip().split('\n')[0].split(v_dlm))
 
 def google_geocode(v_addr):  
     ##(20230928) return google geocode (e.g. latitude, longitude) from address
@@ -271,30 +271,6 @@ class lc_session():
 		self.dsname =lambda s: s if len(s.split('.'))<2 else s.split('.')[1]
 		self.empty('work')
 		print(self)
-	def readme(self):
-		print('''readme: lc_session().readme()
-by: Leo CHAN
-version: 20231209
-test script:
-import sys,requests
-exec(requests.get('https://raw.githubusercontent.com/leo202103/public_area/main/box/lc_box.py').text)
-sys.path.append('D:\\temp\\0806')
-import importlib, lc_box
-importlib.reload(lc_box)                # Reload the module
-lc_box1 =lc_box.lc_session()
-lc_box1.readme()
-lc_box1.get_keys('user')
-lc_box1.df_get(gs='sashelp.class')
-lc_box1.df_get(csv='//app/data/sample_large_df.zip')
-lc_box1.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
-lc_box1.df_get(sas='//app/data/airline.sas7bdat')
-lc_box1.print_df('user.df_test')
-lc_box1.sort('user.df_test',by=['C2','C3'])
-lc_box1.select('user.df_test',start=n-6)
-lc_box1.spotify().search(q='I\'m Tied, To You', type='album')
-lc_box.sample_large_df(90000)
-lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
-		''')
 	def date_put(self,dt,tz='Asia/Hong_Kong'):
 		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
 		import datetime, pytz
@@ -321,6 +297,8 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		v_df=v_store.select('/'+self.dsname(df_name), where, start, stop, columns)
 		v_store.close()
 		return v_df
+	def df(self,df_name, where=None, start=None, stop=None, columns=None):
+		return self.select(df_name, where=where, start=start, stop=stop, columns=columns)
 	def get_df(self,df_name):
 		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
 		v_df=v_store.get('/'+self.dsname(df_name))
@@ -398,7 +376,7 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		import spotipy
 		from spotipy.oauth2 import SpotifyOAuth
 		CLIENT_ID = 'a7aa531b72d64e1999dcbf3e87ff78da'
-		CLIENT_SECRET = input('CLIENT_SECRET:')
+		CLIENT_SECRET = input('CLIENT_SECRET:')  ###
 		scopes = ["user-follow-read", 'ugc-image-upload', 'user-read-playback-state',
 		          'user-modify-playback-state', 'user-read-currently-playing', 'user-read-private',
 		          'user-read-email', 'user-follow-modify', 'user-follow-read', 'user-library-modify',
@@ -409,6 +387,98 @@ lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results']
 		                                               client_secret=CLIENT_SECRET,
 		                                               redirect_uri='http://localhost:8887/callback',
 		                                               scope=scopes, open_browser=False))
+	def data(self,df_name=None,cards=None,v_dlm=','):
+		##(20240124): load data from cards and save to store
+		import pandas as pd
+		if not cards: return None
+		df0 =pd.DataFrame(list(map(lambda r:r.split(v_dlm),cards.strip().split('\n')[1:])),columns=cards.strip().split('\n')[0].split(v_dlm))
+		if df_name: return self.put_df(df_name,df0)
+		return df0
+	def ods_put(self,df_name,file,titles=[]):
+		##(20231004) simulate SAS ODS output table to html
+		v_title=''
+		if len(titles)>0: v_title=f'<h1>{titles[0]}</h1>'
+		df0 =self.df(df_name)
+		v_html=f'''
+		<html><body>
+		
+		{v_title}
+		{df0.to_html(index=False)}
+		</body></html>
+		'''
+		f1=open(file,'w')
+		f1.write(v_html)
+		f1.close()
+		return {'msg':f'ods output to file {file}'}
+		## ods_put(lc_box.df_get(gs='sashelp.class')[:5],'//app/data/class5.html')
+	def date_put(self,dt,tz='Asia/Hong_Kong'):
+		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
+		import datetime, pytz
+		return datetime.datetime.strftime(dt.astimezone(pytz.timezone(tz)),'%Y-%m-%d %H:%M:%S.%f%z')
+
+	def date_get(self,dt_str,tz='+0800'):
+		##(20231004) get datetime.datetime from str in format of '%Y-%m-%d %H:%M:%S.%f%z'
+		import datetime, pytz
+		vformat='%Y-%m-%d %H:%M:%S.%f%z'
+		if len(dt_str.split('+')[0])==8: vformat='%y-%m-%d%z'
+		if len(dt_str.split('+')[0])==10: vformat='%Y-%m-%d%z'
+		if len(dt_str.split('+')[0])==13: vformat='%Y-%m-%d %H%z'
+		if len(dt_str.split('+')[0])==16: vformat='%Y-%m-%d %H:%M%z'
+		if len(dt_str.split('+')[0])==19: vformat='%Y-%m-%d %H:%M:%S%z'
+		if len(dt_str.split('+')[0])>19: vformat='%Y-%m-%d %H:%M:%S.%f%z'
+		if len(dt_str.split('+'))<2: dt_str=dt_str+tz
+		return datetime.datetime.strptime(dt_str,vformat)
+		'''lc_box.date_get('2023-10-04 00:55:56.327675+0800'), lc_box.date_put(date_get('2023-10-04+0800'))\
+		, lc_box.date_put(date_get('23-10-04+0800')), lc_box.date_put(date_get('2023-10-04 13+0800'))\
+		, lc_box.date_put(date_get('2023-10-04 13:12+0800')), lc_box.date_put(date_get('2023-10-04 13:12:44.55+0800'))
+		'''
+	def getJSON(self,p_json=None,url=config()['gas']['url_load']):
+		import requests, json
+		response = requests.get(url,p_json)
+		data = json.loads(response.text)
+		return data
+	def google_geocode(self,v_addr):  
+		##(20230928) return google geocode (e.g. latitude, longitude) from address
+		## API key definded under developer01.lc@gmail.com of project lc2022-share
+		return self.getJSON(url=f'https://maps.googleapis.com/maps/api/geocode/json?address={v_addr}&key=AIzaSyCxEaArQPHkF-N_NPraPfogdlutQIdYOGU')
+		##e.g. google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location'] return {'lat': 37.4223878, 'lng': -122.0841877}
+	def sample_large_df(self,nrows=10000,ncols=100):
+		## (20231003-8)create sample large data file
+		import numpy as np, pandas as pd, random
+		##return pd.DataFrame(list(map(lambda c:list(map(lambda c:random.random(),range(ncols))),range(nrows))),columns=list(map(lambda c:"C"+str(c),range(ncols))))
+		return pd.DataFrame(np.random.standard_normal((int(nrows),ncols)),columns=list(map(lambda c:'C'+str(c),range(ncols))))
+	def readme(self):
+		print('''readme: lc_session().readme()
+by: Leo CHAN
+version: 20231209, 20240124
+test script:
+import sys,requests
+exec(requests.get('https://raw.githubusercontent.com/leo202103/public_area/main/box/lc_box.py').text)
+s =lc_session()
+sys.path.append('D:\\temp')
+import importlib, lc_box
+importlib.reload(lc_box)                # Reload the module
+s =lc_box.lc_session()
+s.readme()
+s.get_keys('user')
+s.df_get(gs='sashelp.class')
+s.df_get(csv='//app/data/sample_large_df.zip')
+s.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
+s.df_get(sas='//app/data/airline.sas7bdat')
+s.print_df('user.df_test')
+s.sort('user.df_test',by=['C2','C3'])
+s.select('user.df_test',start=n-6)
+s.df('user.df_test',start=n-6)
+s.spotify().search(q='I\'m Tied, To You', type='album')
+s.data('test',cards='A,B\n1,2\n3,4')
+s.ods_put('user.class')
+s.date_get('2023-10-04 00:55:56.327675+0800')
+s.date_put(datetime.datetime.now())
+s.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
+s.sample_large_df(90000)
+lc_box.sample_large_df(90000)
+lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
+		''')
 
 '''
 s=lc_session()
