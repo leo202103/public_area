@@ -3,7 +3,7 @@
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
-Date: 20230908,1009,1014,1015,1023,1209,1214
+Date: 20230908,1009,1014,1015,1023,1209,1214, 20240127
 Desc: lc python tool-box
 Test Script:
 import sys
@@ -262,13 +262,14 @@ def logmsg(p_msg):
 
 class lc_session():
 	def __init__(self,userparm={}):
-		import urllib,time,ssl
+		import urllib,time,ssl,re
 		self.context = ssl.create_default_context()
 		self.context.set_ciphers('DEFAULT@SECLEVEL=1')
 		self.chunk_size=userparm.get('chunk_size',50000)                                       ## limit to 500000 rows for each chunk
 		self.lib={'work':userparm.get('work','./work'), 'user':userparm.get('user','./user')}
 		self.libname=lambda s: 'work' if len(s.split('.'))<2 else s.split('.')[0]
 		self.dsname =lambda s: s if len(s.split('.'))<2 else s.split('.')[1]
+		self.regx=lambda r,s,pos=0: [[c.group(),pos+c.start(),pos+c.end()] for c in re.finditer(r,s[pos:],re.IGNORECASE)]
 		self.empty('work')
 		print(self)
 	def date_put(self,dt,tz='Asia/Hong_Kong'):
@@ -376,7 +377,7 @@ class lc_session():
 		import spotipy
 		from spotipy.oauth2 import SpotifyOAuth
 		CLIENT_ID = 'a7aa531b72d64e1999dcbf3e87ff78da'
-		CLIENT_SECRET = input('CLIENT_SECRET:')  ###
+		CLIENT_SECRET = input('CLIENT_SECRET:')  ### 
 		scopes = ["user-follow-read", 'ugc-image-upload', 'user-read-playback-state',
 		          'user-modify-playback-state', 'user-read-currently-playing', 'user-read-private',
 		          'user-read-email', 'user-follow-modify', 'user-follow-read', 'user-library-modify',
@@ -447,10 +448,69 @@ class lc_session():
 		import numpy as np, pandas as pd, random
 		##return pd.DataFrame(list(map(lambda c:list(map(lambda c:random.random(),range(ncols))),range(nrows))),columns=list(map(lambda c:"C"+str(c),range(ncols))))
 		return pd.DataFrame(np.random.standard_normal((int(nrows),ncols)),columns=list(map(lambda c:'C'+str(c),range(ncols))))
+	def regx_sql(self,sqlcode):
+		## (20240127)sql parser using regular expression
+		import re
+		sql_keywords=['create table', 'as select', 'select','from','left join','inner join','right join','where','order by', 'group by', 'having']
+		regx=lambda r,s,pos=0: [[c.group(),pos+c.start(),pos+c.end()] for c in re.finditer(r,s[pos:],re.IGNORECASE)]
+		re_key =lambda k: r"\s*\b"+k.strip().replace(" ",r"\s+")+r"\s+"
+		sql_parser, pos =[], 0
+		for k in sql_keywords:
+			regx0 = regx(re_key(k), sqlcode,pos)
+			regx1 =[k]
+			if len(regx0)>0:
+				regx1.extend(regx0[0])
+				sql_parser[-1].append(regx1[2]) if len(sql_parser)>0 else None
+				sql_parser.append(regx1)
+		return sql_parser
+		''' unit-test
+		s.regx_sql("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+		[['select', '  Select\n', 0, 9, 17],
+		 ['from', '  from ', 17, 24, 37],
+		 ['where', '   WHERE ', 37, 46, 53],
+		 ['order by', ' order  By ', 53, 64]]
+		'''
+	def regx_brackets(self,s,debug=False):
+		import re
+		regx=lambda r,s,pos=0: [[c.start(),c.end(),c.group()] for c in re.finditer(r,s[pos:],re.IGNORECASE)]
+		re_quote   =r'"[^"]*"'+'|'+r"'[^']*'"
+		re_bracket =r'\(([^\(\)x"]*?)+\)'.replace('x',"'")
+		s0 =list(s)
+		out ={'src':s, 'quote':regx(re_quote,s), 'bracket':[]}                         ## locate the quote ('..', "..")
+		for c in regx(re_quote,s):
+			for i in range(c[0],c[1]): s0[i]=' '
+		while (len(regx(re_bracket,''.join(s0)))>0):                                   ## locate brackets ((..)..(..))
+			out['bracket'].append(regx(re_bracket,''.join(s0)))
+			for c in regx(re_bracket,''.join(s0)):
+				for i in range(c[0],c[1]): s0[i]=' '
+		chk1 =regx(r'[\(\)]',''.join(s0))
+		chk2 =regx(r'["\']',''.join(s0))
+		out['rc']=[1,f'ERR: unmatch bracket at {chk1[0]}'] if len(chk1)>0 \
+		else [2,f'ERR: unmatch quote at {chk2[0]}'] if len(chk2)>0 \
+		else [0, 'MSG: success']
+		if debug:
+			print(s)
+			print(''.join(s0))
+			print(out)
+			print(''.join(s0))
+		return out
+		''' unit-test
+		>>> s=lc_box.lc_session()
+		>>> s.regx_brackets('test "hello" world. it "s good." so ...(((A))+("B"))=("C")...')
+		{'src': 'test "hello" world. it "s good." so ...(((A))+("B"))=("C")...',
+		 'quote': [[5, 12, '"hello"'],
+		  [23, 32, '"s good."'],
+		  [47, 50, '"B"'],
+		  [54, 57, '"C"']],
+		 'bracket': [[[41, 44, '(A)'], [46, 51, '(   )'], [53, 58, '(   )']],
+		  [[40, 45, '(   )']],
+		  [[39, 52, '(     +     )']]],
+		 'rc': [0, 'MSG: success']}
+		'''
 	def readme(self):
 		print('''readme: lc_session().readme()
 by: Leo CHAN
-version: 20231209, 20240124
+version: 20231209-20240127
 test script:
 import sys,requests
 exec(requests.get('https://raw.githubusercontent.com/leo202103/public_area/main/box/lc_box.py').text)
@@ -476,6 +536,9 @@ s.date_get('2023-10-04 00:55:56.327675+0800')
 s.date_put(datetime.datetime.now())
 s.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 s.sample_large_df(90000)
+s.regx_brackets('locating brackets and quotes like "hello".. \'world\' or X+((A+B)*C/(Y+Z)).',debug=True)
+s.regx_sql("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+s.regx(r'\w+ \w+','Hello World')
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
