@@ -3,7 +3,7 @@
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
-Date: 20230908,1009,1014,1015,1023,1209,1214, 20240127
+Date: 20230908,1009,1014,1015,1023,1209,1214, 20240128
 Desc: lc python tool-box
 Test Script:
 import sys
@@ -448,6 +448,54 @@ class lc_session():
 		import numpy as np, pandas as pd, random
 		##return pd.DataFrame(list(map(lambda c:list(map(lambda c:random.random(),range(ncols))),range(nrows))),columns=list(map(lambda c:"C"+str(c),range(ncols))))
 		return pd.DataFrame(np.random.standard_normal((int(nrows),ncols)),columns=list(map(lambda c:'C'+str(c),range(ncols))))
+	def regx_sql3(self,sqlcode):
+		## (20240128)sql parser using regular expression
+		import re
+		sql_keywords=['create table', 'as select', 'select','from','left join','inner join','right join','where','order by', 'group by', 'having']
+		re_key =lambda k: r"\s*\b"+k.strip().replace(" ",r"\s+")+r"\s+"
+		pos, pos_to, out=0, 0, []
+		for k in sql_keywords:
+			m=re.search(re_key(k), sqlcode[pos:], re.IGNORECASE)
+			if m:
+				if len(out)>0: out[-1][-1]=sqlcode[p_to:pos+m.start()]
+				pos, p_to =pos+m.start(), pos+m.end()
+				out.append([k,pos,p_to,m.group(),sqlcode[p_to:]])
+		return {'sql_code':sqlcode, 'sql_tokens':out}
+		''' unit-test
+		s.regx_sql3("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+		{'sql_code': "  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age",
+		 'sql_tokens': [['select', 0, 9, '  Select\n', 'name,age'],
+		  ['from', 17, 24, '  from ', 'sashelp.class'],
+		  ['where', 37, 46, '   WHERE ', "SEX='F'"],
+		  ['order by', 53, 64, ' order  By ', 'age']]}
+		'''
+	def regx_sql2(self,sqlcode):
+		## (20240127)sql parser using regular expression
+		import re
+		sql_keywords=['create table', 'as select', 'select','from','left join','inner join','right join','where','order by', 'group by', 'having']
+		sqlcode ="  Select name,age  from sashelp.class   WHERE SEX='F' order  By age"
+		re_sql=r'\b'+r'\b|\b'.join(map(lambda c:c.replace(' ',r'\s+'),sql_keywords))+r'\b'
+		sql_tokens =[{'sql':c.group().upper().replace(' ','').strip(),'start':c.start(),'end':c.end()} for c in re.finditer(re_sql,sqlcode,re.IGNORECASE)]
+		for c in enumerate(sql_tokens):
+			c[1]['next']=sql_tokens[c[0]+1]['start'] if c[0]+1<len(sql_tokens) else len(sqlcode)
+			c[1]['tokens'] =[x.strip() for x in sqlcode[c[1]['end']:c[1]['next']].split(',')]
+		return {'sql_code':sqlcode, 'sql_tokens':sql_tokens}
+		''' unit-test
+		s.regx_sql2("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+		{'sql_code': "  Select name,age  from sashelp.class   WHERE SEX='F' order  By age",
+		 'sql_tokens': [{'sql': 'SELECT',
+		   'start': 2,
+		   'end': 8,
+		   'next': 19,
+		   'tokens': ['name', 'age']},
+		  {'sql': 'FROM',
+		   'start': 19,
+		   'end': 23,
+		   'next': 40,
+		   'tokens': ['sashelp.class']},
+		  {'sql': 'WHERE', 'start': 40, 'end': 45, 'next': 54, 'tokens': ["SEX='F'"]},
+		  {'sql': 'ORDERBY', 'start': 54, 'end': 63, 'next': 67, 'tokens': ['age']}]}
+		'''
 	def regx_sql(self,sqlcode):
 		## (20240127)sql parser using regular expression
 		import re
@@ -538,6 +586,8 @@ s.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['
 s.sample_large_df(90000)
 s.regx_brackets('locating brackets and quotes like "hello".. \'world\' or X+((A+B)*C/(Y+Z)).',debug=True)
 s.regx_sql("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+s.regx_sql2("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
+s.regx_sql3("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
 s.regx(r'\w+ \w+','Hello World')
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
