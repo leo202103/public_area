@@ -270,6 +270,7 @@ class lc_session():
 		self.libname=lambda s: 'work' if len(s.split('.'))<2 else s.split('.')[0]
 		self.dsname =lambda s: s if len(s.split('.'))<2 else s.split('.')[1]
 		self.regx=lambda r,s,pos=0: [[c.group(),pos+c.start(),pos+c.end()] for c in re.finditer(r,s[pos:],re.IGNORECASE)]
+		self.regx_key =lambda k: r"\s*\b"+k.strip().replace(" ",r"\s+")+r"\s+"
 		self.empty('work')
 		print(self)
 	def date_put(self,dt,tz='Asia/Hong_Kong'):
@@ -373,6 +374,22 @@ class lc_session():
 		## lc_box.df_get(csv='//app/data/sample_large_df.zip')
 		## lc_box.df_get(fwf='//app/data/sample.txt',colspecs=[(0,10),(10,15)],names=['A','B'])
 		## lc_box.df_get(sas='//app/data/airline.sas7bdat')
+	def df_get2(self,gs=None,csv=None,pickle=None,fwf=None,sas=None,sep=",",colspecs=[(1,10)], header=None, names=None, gs_note=False):
+		##(20231003)load google spreadsheet or csv to pandas dataframe
+		import pandas as pd, json
+		if gs: 
+			gs_data=self.gs_get(gs)
+			v_df =pd.DataFrame(list(map(lambda r:list(map(lambda c:r.get(c,''),gs_data['cols'])),gs_data['rows']['values'])),columns=gs_data['cols'])
+			if gs_note:
+				v_df1=pd.DataFrame(list(map(lambda r:list(map(lambda c:r[c],gs_data['cols'])),gs_data['rows']['notes'])))
+				v_df1.columns=list(map(lambda c:'note_'+c,gs_data['cols']))
+				return pd.concat([v_df,v_df1],axis=1)
+			return v_df
+		if csv: return pd.read_csv(csv,sep=sep)
+		if pickle: return pd.read_pickle(pickle)
+		if fwf: return pd.read_fwf(fwf,colspecs=colspecs, header=header, names=names)                    ## fix-column width file
+		if sas: return pd.read_sas(sas)
+		return "err: Neither parameter gs, csv, pickle, fwf or excel parameter not found"
 	def spotify(self):
 		import spotipy
 		from spotipy.oauth2 import SpotifyOAuth
@@ -555,6 +572,18 @@ class lc_session():
 		  [[39, 52, '(     +     )']]],
 		 'rc': [0, 'MSG: success']}
 		'''
+	def sample_data_pool(self,table_name):
+		## 20240129 - sample data pool
+		import pandas as pd
+		df =self.df_get2('lc_public.t_sample_data_pool',gs_note=True).query('table_name=="'+table_name+'"')
+		v_data =df["note_datalines"].iat[0].split()
+		v_col =df["column_names"].iat[0].split()
+		n_col =len(v_col)
+		return pd.concat([pd.DataFrame(v_data[i::n_col],columns=[v_col[i]]) for i in range(len(v_col))],axis=1)
+		''' unit-test
+		s.sample_data_pool('pangs.sas(greene)')
+		s.sample_data_pool('sashelp.class')
+		'''
 	def readme(self):
 		print('''readme: lc_session().readme()
 by: Leo CHAN
@@ -589,6 +618,7 @@ s.regx_sql("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age
 s.regx_sql2("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
 s.regx_sql3("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
 s.regx(r'\w+ \w+','Hello World')
+s.regx(s.regx_key('order by'),'select * from class   ORDER   BY AGE')
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
