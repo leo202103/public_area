@@ -619,6 +619,8 @@ s.regx_sql2("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By ag
 s.regx_sql3("  Select\nname,age  from sashelp.class   WHERE SEX='F' order  By age")
 s.regx(r'\w+ \w+','Hello World')
 s.regx(s.regx_key('order by'),'select * from class   ORDER   BY AGE')
+s.sample_data_pool('pangs.sas(greene)')
+s.sample_data_pool('sashelp.class')
 lc_box.sample_large_df(90000)
 lc_box.google_geocode('1600 Amphitheatre Parkway, Mountain View, CA')['results'][0]['geometry']['location']
 		''')
