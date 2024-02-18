@@ -3,7 +3,7 @@
 '''
 Name: lc_box.py
 Path: https://github.com/leo202103/leo202103/new/main/box/
-Date: 20230908,1009,1014,1015,1023,1209,1214, 20240128
+Date: 20230908,1009,1014,1015,1023,1209,1214, 20240128, 0218
 Desc: lc python tool-box
 Test Script:
 import sys
@@ -394,7 +394,7 @@ class lc_session():
 		import spotipy
 		from spotipy.oauth2 import SpotifyOAuth
 		CLIENT_ID = 'a7aa531b72d64e1999dcbf3e87ff78da'
-		CLIENT_SECRET = input('CLIENT_SECRET:')  ### 
+		CLIENT_SECRET = input('CLIENT_SECRET:')  ### read login doc
 		scopes = ["user-follow-read", 'ugc-image-upload', 'user-read-playback-state',
 		          'user-modify-playback-state', 'user-read-currently-playing', 'user-read-private',
 		          'user-read-email', 'user-follow-modify', 'user-follow-read', 'user-library-modify',
@@ -584,7 +584,13 @@ class lc_session():
 		s.sample_data_pool('pangs.sas(greene)')
 		s.sample_data_pool('sashelp.class')
 		'''
-	def readme(self):
+	def readme(self,note=0):
+		if note==1: print('''note#1: lc_session().readme()
+for s.spotify() under Colab, require following for 
+!pip install instaloader
+!pip install spotipy
+from spotipy.oauth2 import SpotifyOAuth
+		''')
 		print('''readme: lc_session().readme()
 by: Leo CHAN
 version: 20231209-20240127
