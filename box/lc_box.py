@@ -315,7 +315,7 @@ class lc_session():
 		return 0
 	def put_df(self,df_name,p_df):
 		##print(self.lib[self.libname(df_name)])
-		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'w')
 		v_df=v_store.put(self.dsname(df_name),p_df)
 		v_store.close()
 		return p_df
