@@ -13,8 +13,8 @@ importlib.reload(lc_box)                # Reload the module
 '''
 import numpy as np, pandas as pd, gc, datetime
 import time,json,requests,urllib
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+## import spotipy
+## from spotipy.oauth2 import SpotifyOAuth
 
 def config():
 	'''['gas']['url_load']: google apps script to load spreadsheet data by lc_public.gas(lc_developer01@gmail.com)
