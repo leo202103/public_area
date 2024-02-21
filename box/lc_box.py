@@ -429,11 +429,11 @@ class lc_session():
 		f1.close()
 		return {'msg':f'ods output to file {file}'}
 		## ods_put(lc_box.df_get(gs='sashelp.class')[:5],'//app/data/class5.html')
-	def date_put(self,dt,tz='Asia/Hong_Kong'):
+	def date_put(self,dt=None,tz='Asia/Hong_Kong'):
 		##(20231004) put datetime.datetime to str in format of '%Y-%m-%d %H:%M:%S.%f%z'
 		import datetime, pytz
+		if dt is None: dt=datetime.datetime.now()
 		return datetime.datetime.strftime(dt.astimezone(pytz.timezone(tz)),'%Y-%m-%d %H:%M:%S.%f%z')
-
 	def date_get(self,dt_str,tz='+0800'):
 		##(20231004) get datetime.datetime from str in format of '%Y-%m-%d %H:%M:%S.%f%z'
 		import datetime, pytz
