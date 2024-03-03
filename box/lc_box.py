@@ -319,6 +319,17 @@ class lc_session():
 		v_df=v_store.put(self.dsname(df_name),p_df)
 		v_store.close()
 		return p_df
+	def put_table(self,df_name,p_df):
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)],'a')
+		v_df=v_store.put(self.dsname(df_name),p_df,format='table')
+		v_store.close()
+		return p_df
+	def put_rows(self,df_name,p_df):
+		##append rows to existing table
+		v_store =pd.HDFStore(self.lib[self.libname(df_name)])
+		v_df=v_store.append(self.dsname(df_name),p_df)
+		v_store.close()
+		return p_df
 	def sort(self,df_name,by=None,out=None):
 		v_df=self.get_df(df_name)
 		v_df=v_df.sort_values(by)
