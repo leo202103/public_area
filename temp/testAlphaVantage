@@ -1,0 +1,60 @@
+### Test Alpha Vantage (20250604)
+
+import requests
+import pandas as pd
+API_KEY="SCZ5NVPEIHPB8T52"
+base_url="https://www.alphavantage.co/query"
+params = {
+"function": "TIME_SERIES_DAILY",
+"symbol": "BABA",   ##"AAPL",
+"outputsize": "compact",
+"apikey": API_KEY,
+"datatype": "json"
+}
+response = requests.get(base_url,params)
+data = response.json()
+
+df=pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index")
+df = df.astype(float)
+ds.index = pd.to_datatime(df.index)
+df.columns = [col.split(" ")[1] for col in df.columns]
+print(df.sort_index())
+
+
+>>> response = requests.get(base_url,params)
+>>> data = response.json()
+>>>
+>>> df=pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index")
+>>> params = {
+... "function": "TIME_SERIES_DAILY",
+... "symbol": "BABA",   ##"AAPL",
+... "outputsize": "compact",
+... "apikey": API_KEY,
+... "datatype": "json"
+... }
+>>> response = requests.get(base_url,params)
+>>> data = response.json()
+>>>
+>>> df=pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index")
+>>> df = df.astype(float)
+>>> ds.index = pd.to_datatime(df.index)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: module 'pandas' has no attribute 'to_datatime'
+>>> df.columns = [col.split(" ")[1] for col in df.columns]
+>>> print(df.sort_index())
+               open    high       low   close      volume
+2025-01-08   83.090   83.79   82.7200   83.69   9661837.0
+2025-01-10   82.250   82.25   80.4000   80.53  15393850.0
+2025-01-13   80.150   81.08   80.0600   80.54  10726627.0
+2025-01-14   82.390   82.65   81.4900   81.68   8773675.0
+2025-01-15   82.630   82.79   82.1500   82.44  11655722.0
+...             ...     ...       ...     ...         ...
+2025-05-28  117.450  117.92  116.5100  116.74  11707735.0
+2025-05-29  119.035  119.34  116.7000  117.18  12392828.0
+2025-05-30  115.010  115.07  111.6000  113.84  17213209.0
+2025-06-02  114.900  115.40  113.6586  114.75  13147154.0
+2025-06-03  115.380  115.81  114.4150  114.97  14008938.0
+
+[100 rows x 5 columns]
+>>>
